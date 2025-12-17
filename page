@@ -1,0 +1,234 @@
+}, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Form submission
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                business: document.getElementById('business').value,
+                package: document.getElementById('package').value,
+                message: document.getElementById('message').value
+            };
+
+            // Simulação de envio
+            alert('✅ Mensagem enviada com sucesso! Retornarei em até 24 horas.');
+            
+            // Em produção, você substituiria por:
+            // fetch('sua-api-endpoint', { method: 'POST', body: JSON.stringify(formData) })
+            
+            this.reset();
+        });
+
+        // Counter animation
+        function animateCounter(element, target, duration = 2000) {
+            let current = 0;
+            const increment = target / (duration / 16);
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target.toLocaleString('pt-BR');
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString('pt-BR');
+                }
+            }, 16);
+        }
+
+        // Animate counters when visible
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
+                    entry.target.classList.add('counted');
+                    const value = entry.target.textContent.replace(/[^0-9]/g, '');
+                    animateCounter(entry.target, parseInt(value));
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.stat-number, .stat-card-value').forEach(el => {
+            counterObserver.observe(el);
+        });
+
+        // Parallax effect for hero
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            if (hero && scrolled < window.innerHeight) {
+                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+                hero.style.opacity = 1 - (scrolled / window.innerHeight);
+            }
+        });
+
+        // Portfolio item hover effect
+        document.querySelectorAll('.portfolio-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.zIndex = '10';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.zIndex = '1';
+            });
+        });
+
+        // Pricing card selection
+        document.querySelectorAll('.pricing-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove previous selection
+                document.querySelectorAll('.pricing-card').forEach(c => {
+                    c.style.transform = 'translateY(0)';
+                });
+                // Highlight selected
+                this.style.transform = 'translateY(-15px)';
+            });
+        });
+
+        // Easter egg: Konami code
+        let konamiCode = [];
+        const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.key);
+            konamiCode = konamiCode.slice(-10);
+            
+            if (konamiCode.join('') === konamiPattern.join('')) {
+                document.body.style.animation = 'glitch 0.5s ease-in-out';
+                setTimeout(() => {
+                    alert('🎮 Easter egg encontrado! Você desbloqueou o mapa secreto das galerias! (brincadeira... ou não? 🔦)');
+                    document.body.style.animation = '';
+                }, 500);
+            }
+        });
+
+        // Print detection (for saving as PDF)
+        window.addEventListener('beforeprint', () => {
+            document.querySelectorAll('.hero-content').forEach(el => {
+                el.style.animation = 'none';
+            });
+        });
+
+        // Copy email on click
+        document.querySelectorAll('.contact-item').forEach(item => {
+            const details = item.querySelector('.contact-details p');
+            if (details && (details.textContent.includes('@') || details.textContent.includes('('))) {
+                item.style.cursor = 'pointer';
+                item.addEventListener('click', function() {
+                    const text = details.textContent;
+                    navigator.clipboard.writeText(text).then(() => {
+                        const original = details.innerHTML;
+                        details.innerHTML = '✓ Copiado!';
+                        details.style.color = 'var(--accent)';
+                        setTimeout(() => {
+                            details.innerHTML = original;
+                            details.style.color = '';
+                        }, 2000);
+                    });
+                });
+            }
+        });
+
+        // Lazy load images
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                            observer.unobserve(img);
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // Mobile menu (if needed)
+        const createMobileMenu = () => {
+            if (window.innerWidth <= 768) {
+                const nav = document.createElement('nav');
+                nav.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    background: var(--secondary);
+                    padding: 20px;
+                    z-index: 1000;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                `;
+                
+                nav.innerHTML = `
+                    <div style="font-weight: 700; font-size: 1.2rem;">SP Subterrânea</div>
+                    <button id="menuToggle" style="background: var(--accent); border: none; padding: 10px 15px; border-radius: 5px; color: var(--primary); font-weight: 700; cursor: pointer;">
+                        MENU
+                    </button>
+                `;
+                
+                document.body.prepend(nav);
+                document.querySelector('.hero').style.paddingTop = '80px';
+            }
+        };
+
+        createMobileMenu();
+    </script>
+
+    <!-- Download as PDF button (opcional) -->
+    <button onclick="window.print()" style="
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: var(--accent);
+        color: var(--primary);
+        border: none;
+        padding: 15px 25px;
+        border-radius: 50px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0,255,136,0.4);
+        z-index: 999;
+        transition: all 0.3s ease;
+        font-family: 'Montserrat', sans-serif;
+    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        📄 Baixar PDF
+    </button>
+
+    <!-- WhatsApp floating button -->
+    <a href="https://wa.me/5511999999999?text=Olá!%20Vi%20seu%20media%20kit%20e%20gostaria%20de%20conversar%20sobre%20parceria" 
+       target="_blank"
+       style="
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        background: #25D366;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        text-decoration: none;
+        box-shadow: 0 10px 30px rgba(37,211,102,0.4);
+        z-index: 999;
+        transition: all 0.3s ease;
+        animation: pulse 2s ease-in-out infinite;
+    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        💬
+    </a>
+
+</body>
+</html>
