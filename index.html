@@ -1447,16 +1447,28 @@
         });
 
         // Counter animation
-        function animateCounter(element, target, duration = 2000) {
+        function animateCounter(element, target, suffix = '', duration = 2000) {
             let current = 0;
             const increment = target / (duration / 16);
             const timer = setInterval(() => {
                 current += increment;
                 if (current >= target) {
-                    element.textContent = target.toLocaleString('pt-BR');
+                    if (suffix === 'K') {
+                        element.textContent = (target / 1000).toFixed(1) + 'K';
+                    } else if (suffix === 'M') {
+                        element.textContent = (target / 1000000).toFixed(1) + 'M';
+                    } else {
+                        element.textContent = target.toLocaleString('pt-BR') + suffix;
+                    }
                     clearInterval(timer);
                 } else {
-                    element.textContent = Math.floor(current).toLocaleString('pt-BR');
+                    if (suffix === 'K') {
+                        element.textContent = (current / 1000).toFixed(1) + 'K';
+                    } else if (suffix === 'M') {
+                        element.textContent = (current / 1000000).toFixed(1) + 'M';
+                    } else {
+                        element.textContent = Math.floor(current).toLocaleString('pt-BR') + suffix;
+                    }
                 }
             }, 16);
         }
@@ -1466,8 +1478,29 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
                     entry.target.classList.add('counted');
-                    const value = entry.target.textContent.replace(/[^0-9]/g, '');
-                    animateCounter(entry.target, parseInt(value));
+                    const originalText = entry.target.textContent;
+                    
+                    // Detect suffix (K, M, %)
+                    let suffix = '';
+                    let multiplier = 1;
+                    if (originalText.includes('K')) {
+                        suffix = 'K';
+                        multiplier = 1000;
+                    } else if (originalText.includes('M')) {
+                        suffix = 'M';
+                        multiplier = 1000000;
+                    } else if (originalText.includes('%')) {
+                        suffix = '%';
+                    }
+                    
+                    // Extract numeric value
+                    const numericValue = originalText.replace(/[^0-9.,]/g, '').replace(',', '.');
+                    const value = parseFloat(numericValue) * multiplier;
+                    
+                    // Only animate if it's a number (not percentages or special values)
+                    if (!isNaN(value) && suffix !== '%' && !originalText.includes('-') && !originalText.includes('/')) {
+                        animateCounter(entry.target, value, suffix);
+                    }
                 }
             });
         }, { threshold: 0.5 });
